@@ -1,15 +1,16 @@
 package controllers
 
-import javax.inject._
-import play.api._
 import play.api.mvc._
+import utils.SPBActions
+import utils.Predef._
+
+import scala.concurrent.Future
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
  */
-@Singleton
-class HomeController @Inject() extends Controller {
+trait HomeController extends Controller {
 
   /**
    * Create an Action to render an HTML page with a welcome message.
@@ -21,4 +22,12 @@ class HomeController @Inject() extends Controller {
     Ok(views.html.index("Your new application is ready."))
   }
 
+  def query(id: Long) = SPBActions.async { request =>
+    Future.successful(processResponse(Map("data" -> "ok")))
+  }
+
 }
+
+object HomeController extends HomeController
+
+

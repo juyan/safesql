@@ -14,4 +14,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "anorm" % "2.5.0"
 )
 
+routesGenerator := StaticRoutesGenerator
+
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"

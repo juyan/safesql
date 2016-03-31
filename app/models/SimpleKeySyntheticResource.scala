@@ -2,6 +2,7 @@ package models
 
 import anorm.SqlParser
 import anorm.{RowParser, ~}
+import play.api.libs.json.Json
 import safesql.SyntheticSimpleKeyDBTable
 
 /**
@@ -14,7 +15,12 @@ case class SimpleSynResource(
   updatedAt: Option[Long]
 )
 
+object SimpleSynResource {
+  implicit val simpleSynResourceReads = Json.format[SimpleSynResource]
+}
+
 object SimpleSynResourceTable extends SyntheticSimpleKeyDBTable {
+
   type ENTITY = SimpleSynResource
 
   override def tableName = "SIMPLE_SYN"

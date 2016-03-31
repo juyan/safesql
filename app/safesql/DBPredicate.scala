@@ -5,6 +5,7 @@ import anorm.{NamedParameter, ParameterValue}
 /**
   * The predicates for database query backed by a binary tree,
   * with non-leaf node as logic operators and leaves as a single predicate.
+  *
   * @param leftNode The left leaf node.
   * @param rightNode The right leaf node.
   * @param relation The logical relation.
@@ -16,7 +17,7 @@ class DBPredicates (leftNode: Either[DBPredicates, DBPredicate],
   private def nodeToStatement(node: Either[DBPredicates, DBPredicate]): String = {
     node match {
       case Left(predicates) => s"(${predicates.toStatement})"
-      case Right(predicate) => s"(${predicate.toStatement}})"
+      case Right(predicate) => s"(${predicate.toStatement})"
     }
   }
 
@@ -65,6 +66,7 @@ object DBPredicates {
 
 /**
   * A DB predicate.
+  *
   * @param columnName The name of the column.
   * @param variable The variable associated with the column, which is a tuple of variable name and value.
   * @param relation The mathematical relation between the column and the variable.
@@ -77,7 +79,11 @@ class DBPredicate (
 
   def toStatement: String = {
     val variableName = variable._1
-    s"$columnName ${relation.toString} {$variableName}"
+    if (relation == DBPredicateRelation.IN_SEQUENCE) {
+      s"$columnName ${relation.toString} ({$variableName})"
+    } else {
+      s"$columnName ${relation.toString} {$variableName}"
+    }
   }
 }
 

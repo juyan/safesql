@@ -3,6 +3,7 @@ package safesql
 import anorm._
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 /**
@@ -59,6 +60,6 @@ abstract class SyntheticSimpleKeyDBTable extends DBTable {
       DBPredicates(DBPredicate(keyColumn, (keyColumn, key), DBPredicateRelation.EQUALS))
     }
     val sql = batchUpdateStatement(columns, keysPredicate)
-    client.mySQLClient.executeBatchInsert(sql).map(_.size == keys.size)
+    client.mySQLClient.executeBatchUpdate(sql).map(_.size == keys.size)
   }
 }

@@ -1,12 +1,14 @@
 package controllers
 
+import anorm.ParameterValue
 import play.api.mvc._
 import utils.SPBActions
 import utils.Predef._
-
-import anorm._
 import cake.GlobalCake
-import safesql.MySQLClientComponent
+import models.SimpleSynResourceTable
+import play.api.libs.json.Json
+import safesql.{MySQLClientComponent, NumericOp, NumericOpsType}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -27,9 +29,74 @@ trait HomeController extends Controller {
   }
 
   def query(id: Long) = SPBActions.async { request =>
-    val sql = SQL("SELECT tableData FROM SIMPLE_SYN WHERE id = {id}").on(NamedParameter("id", id))
-    mySQLClient.executeQuery(sql, SqlParser.str("tableData")).map { data =>
-      processResponse(Map("data" -> data.headOption.getOrElse("nothing")))
+    SimpleSynResourceTable.get(id)(this).map { entity =>
+      processResponse(Map("data" -> entity.flatMap(_.data).getOrElse("nothing")))
+    }
+  }
+
+  def batchQuery(ids: List[Long]) = SPBActions.async { request =>
+    SimpleSynResourceTable.batchGet(ids)(this).map { entities =>
+      processResponse(Map("data" -> entities.map(Json.toJson(_)).toList))
+    }
+  }
+
+  def insert = SPBActions(parse.json).async { request =>
+    val data = (request.body \ "data").as[String]
+    val createdAt = System.currentTimeMillis()
+    val updatedAt = createdAt
+
+    val params = List(
+      (SimpleSynResourceTable.TABLEDATA_FIELD, ParameterValue.toParameterValue(data)),
+      (SimpleSynResourceTable.CREATEDAT_FIELD, ParameterValue.toParameterValue(createdAt)),
+      (SimpleSynResourceTable.UPDATEDAT_FIELD, ParameterValue.toParameterValue(updatedAt))
+    )
+
+    SimpleSynResourceTable.create(params)(this).map { id =>
+      processResponse(Map("id" -> id.getOrElse(-1)))
+    }
+  }
+
+  def batchInsert = SPBActions(parse.json).async { request =>
+    val data = (request.body \ "data").as[List[String]]
+
+    val params = data.map { d =>
+      val createdAt = System.currentTimeMillis()
+      List(
+        (SimpleSynResourceTable.TABLEDATA_FIELD, ParameterValue.toParameterValue(d)),
+        (SimpleSynResourceTable.CREATEDAT_FIELD, ParameterValue.toParameterValue(createdAt)),
+        (SimpleSynResourceTable.UPDATEDAT_FIELD, ParameterValue.toParameterValue(createdAt))
+      )
+    }
+
+    SimpleSynResourceTable.batchCreate(params)(this).map { ids =>
+      processResponse(Map("ids" -> ids))
+    }
+  }
+
+  def update(id: Long) = SPBActions(parse.json).async { request =>
+    val updatedData = (request.body \ "data").as[String]
+    val updateValue = ParameterValue.toParameterValue(updatedData)
+    SimpleSynResourceTable.update(id,
+      List((SimpleSynResourceTable.TABLEDATA_FIELD, Left(updateValue))))(this).map { updated =>
+      processResponse(Map("updated" -> updated))
+    }
+  }
+
+  def increment(id: Long) = SPBActions.async { request =>
+    SimpleSynResourceTable.update(id,
+      List((SimpleSynResourceTable.CREATEDAT_FIELD, Right(new NumericOp(ParameterValue.toParameterValue(1), NumericOpsType.PLUS))))
+    )(this).map { updated =>
+      processResponse(Map("updated" -> updated))
+    }
+  }
+
+  def batchUpdate(ids: List[Long]) = SPBActions(parse.json).async { request =>
+    val updatedData = (request.body \ "data").as[List[String]].map { element =>
+      val updateValue = ParameterValue.toParameterValue(element)
+      Seq((SimpleSynResourceTable.TABLEDATA_FIELD, Left(updateValue)))
+    }
+    SimpleSynResourceTable.batchUpdate(ids, updatedData)(this).map { updated =>
+      processResponse(Map("updated" -> updated))
     }
   }
 

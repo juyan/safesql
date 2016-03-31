@@ -7,5 +7,19 @@ GET     /                           controllers.HomeController.index
 
 GET     /api/query/:id              controllers.HomeController.query(id: Long)
 
+GET     /api/query                  controllers.HomeController.batchQuery(ids: List[Long])
+
+POST    /api/insert                 controllers.HomeController.insert
+
+POST    /api/batchInsert            controllers.HomeController.batchInsert
+
+POST    /api/update/:id             controllers.HomeController.update(id: Long)
+
+POST    /api/increment/:id          controllers.HomeController.increment(id: Long)
+
+POST    /api/batchUpdate            controllers.HomeController.batchUpdate(ids: List[Long])
+
+
+
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

@@ -1,6 +1,7 @@
 package safesql
 
 import anorm._
+import play.api.Logger
 
 
 /**
@@ -9,6 +10,8 @@ import anorm._
 abstract class DBTable {
 
   def tableName: String
+
+  val logger = Logger("DBTable")
 
   def columnSet(columns: List[String]) : String = {
     val separated = columns.mkString(",")
@@ -25,7 +28,7 @@ abstract class DBTable {
   private def insertSQL(ignore: Boolean, columns: List[(String, String)]): String = {
     val ignoreKeyWord = if (ignore) "IGNORE" else ""
     val columnNames = columnSet(columns.map(_._1))
-    val valueNames = valueSet(columns.map(_._1))
+    val valueNames = valueSet(columns.map(_._2))
     s"INSERT $ignoreKeyWord INTO $tableName $columnNames VALUES $valueNames"
   }
 
@@ -86,6 +89,7 @@ abstract class DBTable {
       }
     }.mkString(",")
     val whereStatement = predicates.toStatement
+    logger.error(s"UPDATE $tableName SET $updateStatement WHERE $whereStatement")
     s"UPDATE $tableName SET $updateStatement WHERE $whereStatement"
   }
 
@@ -115,9 +119,10 @@ abstract class DBTable {
   def batchUpdateStatement(columns: Seq[Seq[(String, Either[ParameterValue, NumericOp])]], predicates: Seq[DBPredicates]): BatchSql = {
     if (columns.isEmpty || (predicates.size != columns.size)) throw new IllegalArgumentException("Empty values while building batch update SQL")
     val statement = updateSQL(columns.head, predicates.head)
-    val params = columns.map { column =>
-      column.map(updateValueToNamedParameter)
+    val params = columns.zip(predicates).map { case (column, predicate) =>
+      column.map(updateValueToNamedParameter) ++ predicate.params
     }
+    logger.error(s"$params")
     BatchSql(statement, params)
   }
 }

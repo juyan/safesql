@@ -45,6 +45,14 @@ object SimpleSynResourceTable extends SyntheticSimpleKeyDBTable {
     }
   }
 
+  def simpleMapper: RowParser[(Long, String)] = {
+    val parser = SqlParser.long(ID_FIELD) ~ SqlParser.str(TABLEDATA_FIELD).?
+
+    parser.map { case id~data =>
+      (id, data.getOrElse("nothing"))
+    }
+  }
+
   val ID_FIELD = "id"
   val TABLEDATA_FIELD = "tableData"
   val CREATEDAT_FIELD = "createdAt"

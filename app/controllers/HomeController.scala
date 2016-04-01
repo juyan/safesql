@@ -7,7 +7,7 @@ import utils.Predef._
 import cake.GlobalCake
 import models.SimpleSynResourceTable
 import play.api.libs.json.Json
-import safesql.{MySQLClientComponent, NumericOp, NumericOpsType}
+import safesql._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -35,8 +35,17 @@ trait HomeController extends Controller {
   }
 
   def batchQuery(ids: List[Long]) = SPBActions.async { request =>
-    SimpleSynResourceTable.batchGet(ids)(this).map { entities =>
-      processResponse(Map("data" -> entities.map(Json.toJson(_)).toList))
+    val predicate = DBPredicate(SimpleSynResourceTable.CREATEDAT_FIELD,
+      (SimpleSynResourceTable.CREATEDAT_FIELD, ParameterValue.toParameterValue(1459400981104L)),
+      DBPredicateRelation.EQUALS
+    )
+    val projection = DBProjection(Seq(SimpleSynResourceTable.TABLEDATA_FIELD, SimpleSynResourceTable.ID_FIELD),
+      SimpleSynResourceTable.simpleMapper)
+    SimpleSynResourceTable.batchGetWithProjection(ids, projection, Some(DBPredicates(predicate)))(this).map { entities =>
+      val entityData = entities.map { entity =>
+        Map("id" -> entity._1, "data" -> entity._2)
+      }
+      processResponse(Map("data" -> entityData))
     }
   }
 

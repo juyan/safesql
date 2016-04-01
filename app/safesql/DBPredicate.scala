@@ -54,6 +54,14 @@ object DBPredicates {
       relation = Some(relation)
     )
   }
+
+  def apply(predicate1: DBPredicate, maybePredicates: Option[DBPredicates], relation: DBPredicatesRelation.Value) = {
+     new DBPredicates(
+      leftNode = Right(predicate1),
+      rightNode = maybePredicates.map(Left(_)),
+      relation = Some(relation)
+    )
+  }
   
   def apply(predicate: DBPredicate) = {
     new DBPredicates(

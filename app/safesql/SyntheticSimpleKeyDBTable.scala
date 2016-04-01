@@ -25,13 +25,29 @@ abstract class SyntheticSimpleKeyDBTable extends DBTable {
     client.mySQLClient.executeQuery[ENTITY](sql, mapper).map(_.headOption)
   }
 
+  def getWithProjection[T](key: Long, projection: DBProjection[T])(implicit client: MySQLClientComponent): Future[Option[T]] = {
+    val predicate = DBPredicate(keyColumn, (keyColumn, key), DBPredicateRelation.EQUALS)
+    val sql = selectStatement(projection, DBPredicates(predicate))
+    client.mySQLClient.executeQuery[T](sql, projection.mapper).map(_.headOption)
+  }
+
   def batchGet(keys: Iterable[Long], predicates: Option[DBPredicates] = None)
     (implicit client: MySQLClientComponent): Future[Iterable[ENTITY]] = {
     if (keys.isEmpty) Future.successful(Seq())
     else {
       val predicate = DBPredicate(keyColumn, (keyColumn, keys.toSeq), DBPredicateRelation.IN_SEQUENCE)
-      val sql = selectStatement(DBPredicates(predicate))
+      val sql = selectStatement(DBPredicates(predicate, predicates, DBPredicatesRelation.AND))
       client.mySQLClient.executeQuery[ENTITY](sql, mapper)
+    }
+  }
+
+  def batchGetWithProjection[T](keys: Iterable[Long], projection: DBProjection[T], predicates: Option[DBPredicates] = None)
+                               (implicit client: MySQLClientComponent): Future[Iterable[T]] = {
+    if (keys.isEmpty) Future.successful(Seq())
+    else {
+      val predicate = DBPredicate(keyColumn, (keyColumn, keys.toSeq), DBPredicateRelation.IN_SEQUENCE)
+      val sql = selectStatement(projection, DBPredicates(predicate, predicates, DBPredicatesRelation.AND))
+      client.mySQLClient.executeQuery[T](sql, projection.mapper)
     }
   }
 

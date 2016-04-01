@@ -79,6 +79,13 @@ abstract class DBTable {
     SQL(s"SELECT * FROM $tableName WHERE $statement").on(params: _*)
   }
 
+  def selectStatement[T](projection: DBProjection[T], predicates: DBPredicates): SimpleSql[Row] = {
+    val statement = predicates.toStatement
+    val params = predicates.params
+    val projectedFields = projection.commaSeparatedFields
+    SQL(s"SELECT $projectedFields FROM $tableName WHERE $statement").on(params: _*)
+  }
+
   private def updateSQL(columns: Seq[(String, Either[ParameterValue, NumericOp])], predicates: DBPredicates): String = {
     val updateStatement = columns.map { v =>
       val updateType = v._2

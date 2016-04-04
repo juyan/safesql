@@ -7,7 +7,7 @@ class TwoKeyPartsComplexKey[T1,T2]
 (
    val keyPart1 : DBParameter,
    val keyPart2 : Option[DBParameter]
-) extends ComplexKey[T1] {
+) extends ComplexKey {
 
   override def toPredicates(keyPartColumns: IndexedSeq[String]): DBPredicates = {
     val keyPart1Column = keyPartColumns(0)
@@ -19,7 +19,7 @@ class TwoKeyPartsComplexKey[T1,T2]
     DBPredicates(firstKeyPartPredicate, maybeSecondKeyPartPredicate)
   }
 
-  override def firstKeyPart: T1 = keyPart1.value.asInstanceOf[T1]
+  def firstKeyPart: T1 = keyPart1.value.asInstanceOf[T1]
 
   def secondKeyPart: Option[T2] = keyPart2.map(_.value.asInstanceOf[T2])
 

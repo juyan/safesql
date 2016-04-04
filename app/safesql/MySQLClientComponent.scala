@@ -16,8 +16,6 @@ trait MySQLClientComponent {
 
     def executeInsert(sql: SimpleSql[Row]): Future[Option[Long]]
 
-    def executeInsert[T](sql: SimpleSql[Row], keyParser: RowParser[T]): Future[Option[T]]
-
     def executeUpdate(sql: SimpleSql[Row]): Future[Int]
 
     def executeBatchInsert(sql: BatchSql): Future[List[Long]]
@@ -47,14 +45,6 @@ trait DefaultMySQLClientComponent extends MySQLClientComponent {
         sql.executeInsert[Option[Long]]()
       }
     }))(mysqlContext)
-
-
-    override def executeInsert[T](sql: SimpleSql[Row], keyParser: RowParser[T]): Future[Option[T]] =
-      Future(blocking({
-        DB.withConnection { implicit c =>
-          sql.executeInsert(keyParser.singleOpt)
-        }
-      }))(mysqlContext)
 
     override def executeUpdate(sql: SimpleSql[Row]): Future[Int] = Future(blocking({
       DB.withConnection { implicit c =>

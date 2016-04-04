@@ -21,6 +21,10 @@ POST    /api/batchUpdate            controllers.HomeController.batchUpdate(ids: 
 
 POST    /api/complex/insert         controllers.ComplexKeyTestController.insert
 
+POST    /api/complex/update         controllers.ComplexKeyTestController.update(parentId: Long, id: Long)
+
+POST    /api/complex/batchUpdate    controllers.ComplexKeyTestController.batchUpdate
+
 
 
 # Map static resources from the /public folder to the /assets URL path

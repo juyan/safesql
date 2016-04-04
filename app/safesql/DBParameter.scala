@@ -15,13 +15,20 @@ object DBParameter {
     def toDBParameter: DBParameter = {
       DBParameter(long, ParameterValue.toParameterValue(long))
     }
+
+    def toParameterValue: ParameterValue = {
+      ParameterValue.toParameterValue(long)
+    }
   }
 
   implicit class StringToDBString(val string: String) {
     def toDBParameter: DBParameter = {
       DBParameter(string, ParameterValue.toParameterValue(string))
     }
-  }
 
+    def toParameterValue: ParameterValue = {
+      ParameterValue.toParameterValue(string)
+    }
+  }
 }
 

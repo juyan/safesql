@@ -22,8 +22,6 @@ object ComplexSynResource {
 
 object ComplexSynResourceTable extends ComplexKeyDBTable {
 
-  type KEYPART1 = Long
-
   type KEY = TwoKeyPartsComplexKey[Long, Long]
 
   type ENTITY = ComplexSynResource

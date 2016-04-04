@@ -55,6 +55,23 @@ object DBPredicates {
     )
   }
 
+  def apply(predicates1: DBPredicates, predicates2: Option[DBPredicates], relation: DBPredicatesRelation.Value) : DBPredicates = {
+    new DBPredicates(
+      leftNode = Left(predicates1),
+      rightNode = predicates2.map(Left(_)),
+      relation = Some(relation)
+    )
+  }
+
+  def apply(predicate1: DBPredicate, maybePredicate2: Option[DBPredicate]) = {
+    new DBPredicates(
+      leftNode = Right(predicate1),
+      rightNode = maybePredicate2.map(Right(_)),
+      relation = Some(DBPredicatesRelation.AND)
+    )
+  }
+
+
   def apply(predicate1: DBPredicate, maybePredicates: Option[DBPredicates], relation: DBPredicatesRelation.Value) = {
      new DBPredicates(
       leftNode = Right(predicate1),
@@ -69,6 +86,22 @@ object DBPredicates {
       rightNode = None,
       relation = None
     )
+  }
+
+  def apply(predicates: Iterable[DBPredicates], relation: DBPredicatesRelation.Value) : DBPredicates = {
+    if (predicates.size == 1) {
+      predicates.head
+    }
+    else if (predicates.isEmpty) {
+      throw new IllegalArgumentException("Empty iterable of predicate passed to construct a predicates")
+    }
+    else {
+      val firstPredicates = predicates.head
+      predicates.tail.foldLeft[DBPredicates](firstPredicates) { (result, predicates) =>
+        val merged = DBPredicates(result, Some(predicates), DBPredicatesRelation.OR)
+        merged
+      }
+    }
   }
 }
 

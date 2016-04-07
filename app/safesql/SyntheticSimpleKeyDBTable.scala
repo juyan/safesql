@@ -64,13 +64,15 @@ abstract class SyntheticSimpleKeyDBTable extends DBTable {
     client.mySQLClient.executeBatchInsert(sql)
   }
 
-  def update(key: Long, columns: List[(String, Either[ParameterValue, NumericOp])])(implicit client: MySQLClientComponent): Future[Boolean] = {
+  def update(key: Long, columns: List[(String, Either[ParameterValue, NumericOp])])
+            (implicit client: MySQLClientComponent): Future[Boolean] = {
     val keyPredicate = DBPredicate(keyColumn, (keyColumn, key), DBPredicateRelation.EQUALS)
     val sql = updateStatement(columns, DBPredicates(keyPredicate))
     client.mySQLClient.executeUpdate(sql).map(_ == 1)
   }
 
-  def batchUpdate(keys: Seq[Long], columns: Seq[Seq[(String, Either[ParameterValue, NumericOp])]])(implicit client: MySQLClientComponent): Future[Boolean] = {
+  def batchUpdate(keys: Seq[Long], columns: Seq[Seq[(String, Either[ParameterValue, NumericOp])]])
+                 (implicit client: MySQLClientComponent): Future[Boolean] = {
     if (keys.size != columns.size || keys.isEmpty) throw new IllegalArgumentException("Invalid input for batch update")
     val keysPredicate = keys.map { key =>
       DBPredicates(DBPredicate(keyColumn, (keyColumn, key), DBPredicateRelation.EQUALS))

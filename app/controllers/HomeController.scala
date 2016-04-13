@@ -108,7 +108,6 @@ trait HomeController extends Controller {
       processResponse(Map("updated" -> updated))
     }
   }
-
 }
 
 object HomeController extends HomeController with GlobalCake

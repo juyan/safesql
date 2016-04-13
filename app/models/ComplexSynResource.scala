@@ -2,8 +2,9 @@ package models
 
 import anorm.{RowParser, SqlParser, ~}
 import play.api.libs.json.Json
-import safesql.{ComplexKeyDBTable, DBParameter, TwoKeyPartsComplexKey}
+import safesql.{DBParameter, TwoKeyPartsComplexKey}
 import safesql.DBParameter._
+import safesql.tables.ComplexKeyDBTable
 
 /**
   * Created by junyan on 4/2/16.

@@ -3,7 +3,7 @@ package models
 import anorm.SqlParser
 import anorm.{RowParser, ~}
 import play.api.libs.json.Json
-import safesql.SyntheticSimpleKeyDBTable
+import safesql.tables.SyntheticSimpleKeyDBTable
 
 /**
   * Created by junyan on 3/27/16.

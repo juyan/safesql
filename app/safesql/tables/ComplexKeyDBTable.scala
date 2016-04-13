@@ -1,9 +1,10 @@
-package safesql
+package safesql.tables
 
 import anorm.{ParameterValue, RowParser}
+import safesql.{DBPredicates, DBPredicatesRelation, _}
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /**
   * Created by junyan on 3/31/16.
@@ -76,5 +77,22 @@ abstract class ComplexKeyDBTable extends DBTable {
     }
     val sql = batchUpdateStatement(columns, keysPredicate)
     client.mySQLClient.executeBatchUpdate(sql).map(_.size == keys.size)
+  }
+
+  def queryByIndex(predicates: DBPredicates, pagingContext: PagingContext)(implicit client: MySQLClientComponent):
+  Future[IndexedSeqWithPagination[ENTITY]] = {
+
+    val sql = selectStatement(predicates, pagingContext)
+    client.mySQLClient.executeQuery[ENTITY](sql, mapper).map { results =>
+      IndexedSeqWithPagination(results.toIndexedSeq, pagingContext)
+    }
+  }
+
+  def queryByIndexWithProjection[T](predicates: DBPredicates, projection: DBProjection[T], pagingContext: PagingContext)
+                                   (implicit client: MySQLClientComponent): Future[IndexedSeqWithPagination[T]] = {
+    val sql = selectStatement(predicates, pagingContext)
+    client.mySQLClient.executeQuery[T](sql, projection.mapper).map { results =>
+      IndexedSeqWithPagination(results.toIndexedSeq, pagingContext)
+    }
   }
 }

@@ -72,6 +72,16 @@ object Predef {
     def toFullDate : String = fullDateFormatter.format(date)
   }
 
+  implicit class TupleToRichTuple[T,V](val tuple: (T,V)) {
+    def mapLeft[R](f: T => R): (R, V) = {
+      (f(tuple._1), tuple._2)
+    }
+
+    def mapRight[R](f: V => R): (T, R) = {
+      (tuple._1, f(tuple._2))
+    }
+  }
+
   def processResponse(response: Any): Result = {
     Results.Ok(JsonUtils.toJsValue(Map("response" -> response))).as(MimeTypes.JSON)
   }

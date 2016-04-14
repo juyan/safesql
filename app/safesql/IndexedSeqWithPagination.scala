@@ -17,6 +17,6 @@ case class IndexedSeqWithPagination[+A](
 
 object IndexedSeqWithPagination {
   def apply[A](elements: IndexedSeq[A], pagingContext: PagingContext) = {
-    IndexedSeqWithPagination[A](pagingContext.start, elements.length, None, elements)
+    new IndexedSeqWithPagination[A](pagingContext.start, elements.length, None, elements)
   }
 }

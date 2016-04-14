@@ -21,7 +21,7 @@ class DBPredicates(leftNode: Either[DBPredicates, DBPredicate],
     (String, Seq[NamedParameter]) = {
 
     node match {
-      case Left(predicates) => ("df", List())
+      case Left(predicates) => predicates.toStatement(sequenceGenerator)
       case Right(predicate) => predicate.toStatement(sequenceGenerator).mapRight(Seq(_))
     }
   }

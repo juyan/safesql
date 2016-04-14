@@ -2,6 +2,7 @@ package safesql.tables
 
 import anorm._
 import safesql.{DBPredicatesRelation, NumericOp, _}
+import safesql.DBParameter._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -21,14 +22,14 @@ abstract class SyntheticSimpleKeyDBTable extends DBTable {
   def requiredFields: Set[String]
 
   def get(key: Long)(implicit client: MySQLClientComponent): Future[Option[ENTITY]] = {
-    val predicate = DBPredicate(keyColumn, (keyColumn, key), DBPredicateRelation.EQUALS)
+    val predicate = DBPredicate(keyColumn, key.toDBParameter, DBPredicateRelation.EQUALS)
     val sql = selectStatement(DBPredicates(predicate))
     client.mySQLClient.executeQuery[ENTITY](sql, mapper).map(_.headOption)
   }
 
   def getWithProjection[T](key: Long, projection: DBProjection[T])(implicit client: MySQLClientComponent): Future[Option[T]] = {
-    val predicate = DBPredicate(keyColumn, (keyColumn, key), DBPredicateRelation.EQUALS)
-    val sql = selectStatement(projection, DBPredicates(predicate))
+    val predicate = DBPredicate(keyColumn, key.toDBParameter, DBPredicateRelation.EQUALS)
+    val sql = selectStatementWithProjection(projection, DBPredicates(predicate))
     client.mySQLClient.executeQuery[T](sql, projection.mapper).map(_.headOption)
   }
 
@@ -36,7 +37,7 @@ abstract class SyntheticSimpleKeyDBTable extends DBTable {
     (implicit client: MySQLClientComponent): Future[Iterable[ENTITY]] = {
     if (keys.isEmpty) Future.successful(Seq())
     else {
-      val predicate = DBPredicate(keyColumn, (keyColumn, keys.toSeq), DBPredicateRelation.IN_SEQUENCE)
+      val predicate = DBPredicate(keyColumn, keys.toSeq.toDBParameter, DBPredicateRelation.IN_SEQUENCE)
       val sql = selectStatement(DBPredicates(predicate, predicates, DBPredicatesRelation.AND))
       client.mySQLClient.executeQuery[ENTITY](sql, mapper)
     }
@@ -46,8 +47,8 @@ abstract class SyntheticSimpleKeyDBTable extends DBTable {
                                (implicit client: MySQLClientComponent): Future[Iterable[T]] = {
     if (keys.isEmpty) Future.successful(Seq())
     else {
-      val predicate = DBPredicate(keyColumn, (keyColumn, keys.toSeq), DBPredicateRelation.IN_SEQUENCE)
-      val sql = selectStatement(projection, DBPredicates(predicate, predicates, DBPredicatesRelation.AND))
+      val predicate = DBPredicate(keyColumn, keys.toSeq.toDBParameter, DBPredicateRelation.IN_SEQUENCE)
+      val sql = selectStatementWithProjection(projection, DBPredicates(predicate, predicates, DBPredicatesRelation.AND))
       client.mySQLClient.executeQuery[T](sql, projection.mapper)
     }
   }
@@ -67,7 +68,7 @@ abstract class SyntheticSimpleKeyDBTable extends DBTable {
 
   def update(key: Long, columns: List[(String, Either[ParameterValue, NumericOp])])
             (implicit client: MySQLClientComponent): Future[Boolean] = {
-    val keyPredicate = DBPredicate(keyColumn, (keyColumn, key), DBPredicateRelation.EQUALS)
+    val keyPredicate = DBPredicate(keyColumn, key.toDBParameter, DBPredicateRelation.EQUALS)
     val sql = updateStatement(columns, DBPredicates(keyPredicate))
     client.mySQLClient.executeUpdate(sql).map(_ == 1)
   }
@@ -76,7 +77,7 @@ abstract class SyntheticSimpleKeyDBTable extends DBTable {
                  (implicit client: MySQLClientComponent): Future[Boolean] = {
     if (keys.size != columns.size || keys.isEmpty) throw new IllegalArgumentException("Invalid input for batch update")
     val keysPredicate = keys.map { key =>
-      DBPredicates(DBPredicate(keyColumn, (keyColumn, key), DBPredicateRelation.EQUALS))
+      DBPredicates(DBPredicate(keyColumn, key.toDBParameter, DBPredicateRelation.EQUALS))
     }
     val sql = batchUpdateStatement(columns, keysPredicate)
     client.mySQLClient.executeBatchUpdate(sql).map(_.size == keys.size)
@@ -93,7 +94,7 @@ abstract class SyntheticSimpleKeyDBTable extends DBTable {
 
   def queryByIndexWithProjection[T](predicates: DBPredicates, projection: DBProjection[T], pagingContext: PagingContext)
                                    (implicit client: MySQLClientComponent): Future[IndexedSeqWithPagination[T]] = {
-    val sql = selectStatement(predicates, pagingContext)
+    val sql = selectStatementWithProjection(projection, predicates, pagingContext)
     client.mySQLClient.executeQuery[T](sql, projection.mapper).map { results =>
       IndexedSeqWithPagination(results.toIndexedSeq, pagingContext)
     }

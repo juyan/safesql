@@ -6,8 +6,10 @@ import utils.SPBActions
 import utils.Predef._
 import cake.GlobalCake
 import models.SimpleSynResourceTable
-import play.api.libs.json.Json
 import safesql._
+
+import safesql.DBParameter._
+import play.api.libs.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -35,17 +37,10 @@ trait HomeController extends Controller {
   }
 
   def batchQuery(ids: List[Long]) = SPBActions.async { request =>
-    val predicate = DBPredicate(SimpleSynResourceTable.CREATEDAT_FIELD,
-      (SimpleSynResourceTable.CREATEDAT_FIELD, ParameterValue.toParameterValue(1459400981104L)),
-      DBPredicateRelation.EQUALS
-    )
-    val projection = DBProjection(Seq(SimpleSynResourceTable.TABLEDATA_FIELD, SimpleSynResourceTable.ID_FIELD),
-      SimpleSynResourceTable.simpleMapper)
-    SimpleSynResourceTable.batchGetWithProjection(ids, projection, Some(DBPredicates(predicate)))(this).map { entities =>
-      val entityData = entities.map { entity =>
-        Map("id" -> entity._1, "data" -> entity._2)
-      }
-      processResponse(Map("data" -> entityData))
+    val predicate = DBPredicates(DBPredicate(SimpleSynResourceTable.TABLEDATA_FIELD,
+      "foo".toDBParameter, DBPredicateRelation.EQUALS))
+    SimpleSynResourceTable.batchGet(ids, Some(predicate))(this).map { entities =>
+      processResponse(Map("data" -> entities.map(Json.toJson(_))))
     }
   }
 

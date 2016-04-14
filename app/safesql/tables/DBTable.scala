@@ -35,6 +35,7 @@ abstract class DBTable {
 
   /**
    * Construct a INSERT SQL query
+ *
    * @param ignore ignore duplicate key
    * @param columns A list of columns to insert
    * @return A sql query.
@@ -52,6 +53,7 @@ abstract class DBTable {
 
   /**
    * Construct a batch INSERT SQL query
+ *
    * @param ignore ignore duplicate key
    * @param columns A list of parameters for each row to insert.
    * @return A BatchSql object.
@@ -71,6 +73,7 @@ abstract class DBTable {
 
   /**
    * Construct a SELECT SQL query
+ *
    * @param predicates A DBPredicates object containing the predicates for the query.
    * @param pagingContext The paging context. Default is start = 0, count = 20.
    * @return A sql query
@@ -83,13 +86,14 @@ abstract class DBTable {
 
   /**
     * Construct a SELECT SQL query with projection
+ *
     * @param projection A DBProjection object specifying the projection.
     * @param predicates A DBPredicates object containing the predicates for the query.
     * @param pagingContext The paging context. Default is start = 0, count = 20.
     * @tparam T The projected type.
     * @return A sql query.
     */
-  def selectStatement[T](projection: DBProjection[T], predicates: DBPredicates,
+  def selectStatementWithProjection[T](projection: DBProjection[T], predicates: DBPredicates,
                          pagingContext: PagingContext = PagingContext()): SimpleSql[Row] = {
     val (statement, params) = predicates.toStatement(SequenceGenerator[String]())
     val projectedFields = projection.commaSeparatedFields
@@ -102,23 +106,8 @@ abstract class DBTable {
     NamedParameter(variableName, value)
   }
 
-  /**
-   * Construct an UPDATE SQL query
-   * @param columns columns and values to set or numerically increment/decrement
-   * @param predicates predicate on what rows to update
-   * @return A SQL query
-   */
-  def updateStatement(columns: Seq[(String, Either[ParameterValue, NumericOp])], predicates: DBPredicates): SimpleSql[Row] = {
-    if (columns.isEmpty) throw new IllegalArgumentException("Empty values while building insert SQL")
-    val sequenceGenerator = SequenceGenerator[String]()
-    val (whereStatement, whereParams) = predicates.toStatement(sequenceGenerator)
-    val (updateStatement, updateParams) = transformUpdateData(columns, sequenceGenerator)
-    val allParams = whereParams ++ updateParams
-    SQL(s"UPDATE $tableName SET $updateStatement WHERE $whereStatement").on(allParams: _*)
-  }
-
   private def transformUpdateData(data: Seq[(String, Either[ParameterValue, NumericOp])],
-                         sequenceGenerator: SequenceGenerator[String]) : (String, Seq[NamedParameter]) = {
+                                  sequenceGenerator: SequenceGenerator[String]) : (String, Seq[NamedParameter]) = {
     val updateData = data.map {
       case (columnName, updateType) =>
         val variableName = sequenceGenerator.getNameAndSequenceForKey(columnName)
@@ -135,7 +124,24 @@ abstract class DBTable {
   }
 
   /**
+   * Construct an UPDATE SQL query
+ *
+   * @param columns columns and values to set or numerically increment/decrement
+   * @param predicates predicate on what rows to update
+   * @return A SQL query
+   */
+  def updateStatement(columns: Seq[(String, Either[ParameterValue, NumericOp])], predicates: DBPredicates): SimpleSql[Row] = {
+    if (columns.isEmpty) throw new IllegalArgumentException("Empty values while building insert SQL")
+    val sequenceGenerator = SequenceGenerator[String]()
+    val (whereStatement, whereParams) = predicates.toStatement(sequenceGenerator)
+    val (updateStatement, updateParams) = transformUpdateData(columns, sequenceGenerator)
+    val allParams = whereParams ++ updateParams
+    SQL(s"UPDATE $tableName SET $updateStatement WHERE $whereStatement").on(allParams: _*)
+  }
+
+  /**
    * Construct an batched UPDATE SQL query
+ *
    * @param columns A list of elements, each stands for the update values for single row
    * @param predicates predicate on what rows to update
    * @return A BatchSql object

@@ -31,7 +31,7 @@ abstract class ComplexKeyDBTable extends DBTable {
 
   def getWithProjection[T](key: KEY, projection: DBProjection[T])(implicit client: MySQLClientComponent): Future[Iterable[T]] = {
     val predicates = key.toPredicates(keyColumns)
-    val sql = selectStatement(projection, predicates)
+    val sql = selectStatementWithProjection(projection, predicates)
     client.mySQLClient.executeQuery[T](sql, projection.mapper)
   }
 
@@ -90,7 +90,7 @@ abstract class ComplexKeyDBTable extends DBTable {
 
   def queryByIndexWithProjection[T](predicates: DBPredicates, projection: DBProjection[T], pagingContext: PagingContext)
                                    (implicit client: MySQLClientComponent): Future[IndexedSeqWithPagination[T]] = {
-    val sql = selectStatement(predicates, pagingContext)
+    val sql = selectStatementWithProjection(projection, predicates, pagingContext)
     client.mySQLClient.executeQuery[T](sql, projection.mapper).map { results =>
       IndexedSeqWithPagination(results.toIndexedSeq, pagingContext)
     }

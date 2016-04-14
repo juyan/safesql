@@ -12,9 +12,9 @@ class TwoKeyPartsComplexKey[T1,T2]
   override def toPredicates(keyPartColumns: IndexedSeq[String]): DBPredicates = {
     val keyPart1Column = keyPartColumns(0)
     val keyPart2Column = keyPartColumns(1)
-    val firstKeyPartPredicate = DBPredicate(keyPart1Column, (keyPart1Column, keyPart1.DBValue), DBPredicateRelation.EQUALS)
+    val firstKeyPartPredicate = DBPredicate(keyPart1Column, keyPart1, DBPredicateRelation.EQUALS)
     val maybeSecondKeyPartPredicate = keyPart2.map { key =>
-      DBPredicate(keyPart2Column, (keyPart2Column, key.DBValue), DBPredicateRelation.EQUALS)
+      DBPredicate(keyPart2Column, key, DBPredicateRelation.EQUALS)
     }
     DBPredicates(firstKeyPartPredicate, maybeSecondKeyPartPredicate)
   }

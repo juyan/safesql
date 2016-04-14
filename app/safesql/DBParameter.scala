@@ -1,6 +1,6 @@
 package safesql
 
-import anorm.ParameterValue
+import anorm.{ParameterValue, ToStatement}
 
 /**
   * Created by junyan on 4/2/16.
@@ -28,6 +28,12 @@ object DBParameter {
 
     def toParameterValue: ParameterValue = {
       ParameterValue.toParameterValue(string)
+    }
+  }
+
+  implicit class SeqToDBSeq[T](val seq: Seq[T]) {
+    def toDBParameter(implicit toStatement: ToStatement[T]): DBParameter = {
+      DBParameter(seq, ParameterValue.toParameterValue(seq))
     }
   }
 }
